@@ -986,4 +986,526 @@
                             </div>
                             <div class="form-group">
                                 <label for="userPhone">Телефон</label>
-                                <input type="text" id="userPhone" value="
+                                <input type="text" id="userPhone" value="+7 (999) 888-77-66">
+                            </div>
+                            <div class="form-group">
+                                <label for="userPassword">Новый пароль</label>
+                                <input type="password" id="userPassword" placeholder="Введите новый пароль">
+                            </div>
+                            <div class="form-group">
+                                <label for="userPasswordConfirm">Подтверждение пароля</label>
+                                <input type="password" id="userPasswordConfirm" placeholder="Подтвердите новый пароль">
+                            </div>
+                            <button class="btn btn-success">Сохранить изменения</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Данные для демонстрации (в реальном приложении будут храниться в базе данных)
+        let projects = [
+            {
+                id: 1,
+                name: 'ЖК "Солнечный"',
+                client: 'ООО "СтройИнвест"',
+                manager: 'Петров А.В.',
+                startDate: '2023-09-01',
+                endDate: '2023-12-15',
+                budget: 8500000,
+                status: 'in-progress',
+                description: 'Строительство жилого комплекса из 3-х этажных домов'
+            },
+            {
+                id: 2,
+                name: 'Офисный центр "Бизнес-Плаза"',
+                client: 'ИП Петров А.В.',
+                manager: 'Сидорова Е.К.',
+                startDate: '2023-08-15',
+                endDate: '2023-11-30',
+                budget: 5200000,
+                status: 'in-progress',
+                description: 'Реконструкция офисного здания под современный бизнес-центр'
+            },
+            {
+                id: 3,
+                name: 'Частный дом "Резиденция"',
+                client: 'ОАО "ГорСтрой"',
+                manager: 'Кузнецов Д.С.',
+                startDate: '2023-10-01',
+                endDate: '2024-01-20',
+                budget: 2100000,
+                status: 'new',
+                description: 'Строительство частного дома по индивидуальному проекту'
+            }
+        ];
+
+        let tasks = [
+            {
+                id: 1,
+                name: 'Установка окон',
+                projectId: 1,
+                assignee: 'Бригада №3',
+                priority: 'medium',
+                dueDate: '2023-11-10',
+                status: 'in-progress',
+                description: 'Установка пластиковых окон в жилых помещениях'
+            },
+            {
+                id: 2,
+                name: 'Прокладка электропроводки',
+                projectId: 2,
+                assignee: 'Бригада №1',
+                priority: 'high',
+                dueDate: '2023-11-05',
+                status: 'completed',
+                description: 'Прокладка силовой и слаботочной электропроводки'
+            },
+            {
+                id: 3,
+                name: 'Фундаментные работы',
+                projectId: 3,
+                assignee: 'Бригада №2',
+                priority: 'high',
+                dueDate: '2023-10-25',
+                status: 'delayed',
+                description: 'Земляные работы и заливка фундамента'
+            }
+        ];
+
+        // Функции для работы с навигацией
+        document.addEventListener('DOMContentLoaded', function() {
+            // Инициализация навигации
+            initNavigation();
+            
+            // Инициализация данных
+            initProjectsTable();
+            initTasksTable();
+            
+            // Инициализация форм
+            initProjectForm();
+            initTaskForm();
+            
+            // Инициализация отчетов
+            initReports();
+        });
+
+        function initNavigation() {
+            const menuItems = document.querySelectorAll('.menu-item');
+            const pages = document.querySelectorAll('.page');
+            
+            menuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const pageId = this.getAttribute('data-page');
+                    
+                    // Убираем активный класс у всех пунктов меню
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    // Добавляем активный класс текущему пункту
+                    this.classList.add('active');
+                    
+                    // Скрываем все страницы
+                    pages.forEach(page => page.classList.remove('active'));
+                    // Показываем выбранную страницу
+                    document.getElementById(pageId).classList.add('active');
+                });
+            });
+        }
+
+        function initProjectsTable() {
+            const tableBody = document.getElementById('projectsTableBody');
+            tableBody.innerHTML = '';
+            
+            projects.forEach(project => {
+                const statusClass = getStatusClass(project.status);
+                const statusText = getStatusText(project.status);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${project.id}</td>
+                    <td>${project.name}</td>
+                    <td>${project.client}</td>
+                    <td>${project.manager}</td>
+                    <td>${formatDate(project.startDate)}</td>
+                    <td>${formatDate(project.endDate)}</td>
+                    <td>${formatCurrency(project.budget)}</td>
+                    <td><span class="status ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <button class="btn btn-primary" onclick="editProject(${project.id})">Редактировать</button>
+                        <button class="btn btn-danger" onclick="deleteProject(${project.id})">Удалить</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function initTasksTable() {
+            const tableBody = document.getElementById('tasksTableBody');
+            tableBody.innerHTML = '';
+            
+            tasks.forEach(task => {
+                const project = projects.find(p => p.id === task.projectId);
+                const statusClass = getStatusClass(task.status);
+                const statusText = getStatusText(task.status);
+                const priorityText = getPriorityText(task.priority);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${task.id}</td>
+                    <td>${task.name}</td>
+                    <td>${project ? project.name : 'Не указан'}</td>
+                    <td>${task.assignee}</td>
+                    <td>${priorityText}</td>
+                    <td>${formatDate(task.dueDate)}</td>
+                    <td><span class="status ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <button class="btn btn-primary" onclick="editTask(${task.id})">Редактировать</button>
+                        <button class="btn btn-danger" onclick="deleteTask(${task.id})">Удалить</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function initProjectForm() {
+            const addProjectBtn = document.getElementById('addProjectBtn');
+            const cancelProjectBtn = document.getElementById('cancelProjectBtn');
+            const projectForm = document.getElementById('projectForm');
+            const projectFormElement = document.getElementById('projectFormElement');
+            
+            addProjectBtn.addEventListener('click', function() {
+                document.getElementById('projectFormTitle').textContent = 'Добавить проект';
+                projectForm.style.display = 'block';
+                document.getElementById('projects').querySelector('.card').style.display = 'none';
+                resetProjectForm();
+            });
+            
+            cancelProjectBtn.addEventListener('click', function() {
+                projectForm.style.display = 'none';
+                document.getElementById('projects').querySelector('.card').style.display = 'block';
+            });
+            
+            projectFormElement.addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveProject();
+            });
+        }
+
+        function initTaskForm() {
+            const addTaskBtn = document.getElementById('addTaskBtn');
+            const cancelTaskBtn = document.getElementById('cancelTaskBtn');
+            const taskForm = document.getElementById('taskForm');
+            const taskFormElement = document.getElementById('taskFormElement');
+            
+            // Заполняем выпадающие списки
+            const projectSelect = document.getElementById('taskProject');
+            projectSelect.innerHTML = '<option value="">Выберите проект</option>';
+            projects.forEach(project => {
+                const option = document.createElement('option');
+                option.value = project.id;
+                option.textContent = project.name;
+                projectSelect.appendChild(option);
+            });
+            
+            // Заполняем список исполнителей
+            const assigneeSelect = document.getElementById('taskAssignee');
+            const assignees = ['Бригада №1', 'Бригада №2', 'Бригада №3', 'Бригада №4', 'Отдел снабжения', 'Проектный отдел'];
+            assigneeSelect.innerHTML = '<option value="">Выберите исполнителя</option>';
+            assignees.forEach(assignee => {
+                const option = document.createElement('option');
+                option.value = assignee;
+                option.textContent = assignee;
+                assigneeSelect.appendChild(option);
+            });
+            
+            addTaskBtn.addEventListener('click', function() {
+                document.getElementById('taskFormTitle').textContent = 'Добавить задачу';
+                taskForm.style.display = 'block';
+                document.getElementById('tasks').querySelector('.card').style.display = 'none';
+                resetTaskForm();
+            });
+            
+            cancelTaskBtn.addEventListener('click', function() {
+                taskForm.style.display = 'none';
+                document.getElementById('tasks').querySelector('.card').style.display = 'block';
+            });
+            
+            taskFormElement.addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveTask();
+            });
+        }
+
+        function initReports() {
+            const reportPeriod = document.getElementById('reportPeriod');
+            const customPeriod = document.getElementById('customPeriod');
+            
+            reportPeriod.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    customPeriod.style.display = 'block';
+                } else {
+                    customPeriod.style.display = 'none';
+                }
+            });
+        }
+
+        function saveProject() {
+            const id = document.getElementById('projectId').value;
+            const name = document.getElementById('projectName').value;
+            const client = document.getElementById('projectClient').value;
+            const manager = document.getElementById('projectManager').value;
+            const startDate = document.getElementById('projectStartDate').value;
+            const endDate = document.getElementById('projectEndDate').value;
+            const budget = document.getElementById('projectBudget').value;
+            const status = document.getElementById('projectStatus').value;
+            const description = document.getElementById('projectDescription').value;
+            
+            if (id) {
+                // Редактирование существующего проекта
+                const index = projects.findIndex(p => p.id == id);
+                if (index !== -1) {
+                    projects[index] = {
+                        id: parseInt(id),
+                        name,
+                        client: getClientName(client),
+                        manager: getManagerName(manager),
+                        startDate,
+                        endDate,
+                        budget: parseInt(budget),
+                        status,
+                        description
+                    };
+                }
+            } else {
+                // Добавление нового проекта
+                const newId = projects.length > 0 ? Math.max(...projects.map(p => p.id)) + 1 : 1;
+                projects.push({
+                    id: newId,
+                    name,
+                    client: getClientName(client),
+                    manager: getManagerName(manager),
+                    startDate,
+                    endDate,
+                    budget: parseInt(budget),
+                    status,
+                    description
+                });
+            }
+            
+            // Обновляем таблицу и скрываем форму
+            initProjectsTable();
+            document.getElementById('projectForm').style.display = 'none';
+            document.getElementById('projects').querySelector('.card').style.display = 'block';
+            
+            // Также обновляем задачи, так как они связаны с проектами
+            initTasksTable();
+        }
+
+        function saveTask() {
+            const id = document.getElementById('taskId').value;
+            const name = document.getElementById('taskName').value;
+            const projectId = document.getElementById('taskProject').value;
+            const assignee = document.getElementById('taskAssignee').value;
+            const priority = document.getElementById('taskPriority').value;
+            const dueDate = document.getElementById('taskDueDate').value;
+            const status = document.getElementById('taskStatus').value;
+            const description = document.getElementById('taskDescription').value;
+            
+            if (id) {
+                // Редактирование существующей задачи
+                const index = tasks.findIndex(t => t.id == id);
+                if (index !== -1) {
+                    tasks[index] = {
+                        id: parseInt(id),
+                        name,
+                        projectId: parseInt(projectId),
+                        assignee,
+                        priority,
+                        dueDate,
+                        status,
+                        description
+                    };
+                }
+            } else {
+                // Добавление новой задачи
+                const newId = tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1;
+                tasks.push({
+                    id: newId,
+                    name,
+                    projectId: parseInt(projectId),
+                    assignee,
+                    priority,
+                    dueDate,
+                    status,
+                    description
+                });
+            }
+            
+            // Обновляем таблицу и скрываем форму
+            initTasksTable();
+            document.getElementById('taskForm').style.display = 'none';
+            document.getElementById('tasks').querySelector('.card').style.display = 'block';
+        }
+
+        function editProject(id) {
+            const project = projects.find(p => p.id === id);
+            if (!project) return;
+            
+            document.getElementById('projectFormTitle').textContent = 'Редактировать проект';
+            document.getElementById('projectId').value = project.id;
+            document.getElementById('projectName').value = project.name;
+            document.getElementById('projectClient').value = getClientId(project.client);
+            document.getElementById('projectManager').value = getManagerId(project.manager);
+            document.getElementById('projectStartDate').value = project.startDate;
+            document.getElementById('projectEndDate').value = project.endDate;
+            document.getElementById('projectBudget').value = project.budget;
+            document.getElementById('projectStatus').value = project.status;
+            document.getElementById('projectDescription').value = project.description || '';
+            
+            document.getElementById('projectForm').style.display = 'block';
+            document.getElementById('projects').querySelector('.card').style.display = 'none';
+        }
+
+        function editTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+            
+            document.getElementById('taskFormTitle').textContent = 'Редактировать задачу';
+            document.getElementById('taskId').value = task.id;
+            document.getElementById('taskName').value = task.name;
+            document.getElementById('taskProject').value = task.projectId;
+            document.getElementById('taskAssignee').value = task.assignee;
+            document.getElementById('taskPriority').value = task.priority;
+            document.getElementById('taskDueDate').value = task.dueDate;
+            document.getElementById('taskStatus').value = task.status;
+            document.getElementById('taskDescription').value = task.description || '';
+            
+            document.getElementById('taskForm').style.display = 'block';
+            document.getElementById('tasks').querySelector('.card').style.display = 'none';
+        }
+
+        function deleteProject(id) {
+            if (confirm('Вы уверены, что хотите удалить этот проект?')) {
+                projects = projects.filter(p => p.id !== id);
+                // Также удаляем связанные задачи
+                tasks = tasks.filter(t => t.projectId !== id);
+                initProjectsTable();
+                initTasksTable();
+            }
+        }
+
+        function deleteTask(id) {
+            if (confirm('Вы уверены, что хотите удалить эту задачу?')) {
+                tasks = tasks.filter(t => t.id !== id);
+                initTasksTable();
+            }
+        }
+
+        function resetProjectForm() {
+            document.getElementById('projectId').value = '';
+            document.getElementById('projectName').value = '';
+            document.getElementById('projectClient').value = '';
+            document.getElementById('projectManager').value = '';
+            document.getElementById('projectStartDate').value = '';
+            document.getElementById('projectEndDate').value = '';
+            document.getElementById('projectBudget').value = '';
+            document.getElementById('projectStatus').value = 'new';
+            document.getElementById('projectDescription').value = '';
+        }
+
+        function resetTaskForm() {
+            document.getElementById('taskId').value = '';
+            document.getElementById('taskName').value = '';
+            document.getElementById('taskProject').value = '';
+            document.getElementById('taskAssignee').value = '';
+            document.getElementById('taskPriority').value = 'medium';
+            document.getElementById('taskDueDate').value = '';
+            document.getElementById('taskStatus').value = 'new';
+            document.getElementById('taskDescription').value = '';
+        }
+
+        // Вспомогательные функции
+        function getStatusClass(status) {
+            switch(status) {
+                case 'new': return 'status-new';
+                case 'in-progress': return 'status-in-progress';
+                case 'completed': return 'status-completed';
+                case 'delayed': return 'status-delayed';
+                case 'on-hold': return 'status-delayed';
+                default: return 'status-new';
+            }
+        }
+
+        function getStatusText(status) {
+            switch(status) {
+                case 'new': return 'Новый';
+                case 'in-progress': return 'В работе';
+                case 'completed': return 'Завершен';
+                case 'delayed': return 'Просрочен';
+                case 'on-hold': return 'Приостановлен';
+                default: return 'Новый';
+            }
+        }
+
+        function getPriorityText(priority) {
+            switch(priority) {
+                case 'low': return 'Низкий';
+                case 'medium': return 'Средний';
+                case 'high': return 'Высокий';
+                default: return 'Средний';
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ru-RU');
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('ru-RU', { 
+                style: 'currency', 
+                currency: 'RUB',
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function getClientName(clientId) {
+            const clients = {
+                '1': 'ООО "СтройИнвест"',
+                '2': 'ИП Петров А.В.',
+                '3': 'ОАО "ГорСтрой"'
+            };
+            return clients[clientId] || 'Не указан';
+        }
+
+        function getClientId(clientName) {
+            const clients = {
+                'ООО "СтройИнвест"': '1',
+                'ИП Петров А.В.': '2',
+                'ОАО "ГорСтрой"': '3'
+            };
+            return clients[clientName] || '';
+        }
+
+        function getManagerName(managerId) {
+            const managers = {
+                '1': 'Петров А.В.',
+                '2': 'Сидорова Е.К.',
+                '3': 'Кузнецов Д.С.'
+            };
+            return managers[managerId] || 'Не указан';
+        }
+
+        function getManagerId(managerName) {
+            const managers = {
+                'Петров А.В.': '1',
+                'Сидорова Е.К.': '2',
+                'Кузнецов Д.С.': '3'
+            };
+            return managers[managerName] || '';
+        }
+    </script>
+</body>
+</html>
